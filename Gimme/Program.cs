@@ -1,12 +1,16 @@
-﻿using System;
+﻿using System.Threading.Tasks;
+using Gimme.Commands;
+using McMaster.Extensions.CommandLineUtils;
 
 namespace Gimme
 {
-    class Program
+    public class Program
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+           var app = new CommandLineApplication<GimmeCommand>();
+           app.Conventions.UseDefaultConventions();
+           await app.ExecuteAsync(args);
         }
     }
 }
