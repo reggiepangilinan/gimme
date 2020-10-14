@@ -17,6 +17,8 @@ namespace Gimme
            ServiceCollection services = new ServiceCollection();
            services.AddSingleton<IFileSystemService,FileSystemService>();
            services.AddSingleton<JsonSerializerOptions>( _ => new JsonSerializerOptions(){
+               PropertyNameCaseInsensitive = false,
+               ReadCommentHandling = JsonCommentHandling.Skip,
                WriteIndented = true
            });
            ServiceProvider servideProvider = services.BuildServiceProvider();
@@ -26,11 +28,23 @@ namespace Gimme
            app.Conventions.UseDefaultConventions()
                           .UseConstructorInjection(servideProvider);;
 
+            var fileSystemService = servideProvider.GetService<IFileSystemService>();
+
+            if(fileSystemService.FileExists(Constants.GIMME_SETTINGS_FILENAME)) {
+
+            }    
+
             // Dynamically build sub commands
             var dynamicSubCommand = new CommandLineApplication();
             dynamicSubCommand.HelpOption();
             dynamicSubCommand.Name = "dynamic";
             dynamicSubCommand.Description = "⚡️ Some description about the command";
+
+            var subjectOption = new CommandOption("-s|--subject",CommandOptionType.SingleValue);
+            subjectOption.IsRequired(allowEmptyStrings: false, $"{subjectOption.LongName} is required.");
+            subjectOption.Description = "Some option";
+
+            dynamicSubCommand.Options.Add(subjectOption);
             dynamicSubCommand.OnExecuteAsync(cancellationToken => {
                 return Task.Run(()=> Console.WriteLine(@"Hello from dynamic command 👋")); 
             });
