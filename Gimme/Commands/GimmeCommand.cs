@@ -23,7 +23,8 @@ The dotnet cli tool that gives you what you want 😎
 
         "
         ),
-        Subcommand(typeof(Commands.InitializeCommand))
+        Subcommand(typeof(Commands.InitializeCommand)),
+        Subcommand(typeof(Commands.GeneratorCommand))
     ]
     public class GimmeCommand
     {
@@ -36,53 +37,28 @@ The dotnet cli tool that gives you what you want 😎
 
         public async Task OnExecute(CommandLineApplication app, IConsole console)
         {
-            if(!fileSystemService.FileExists(Constants.GIMME_SETTINGS_FILENAME)) {
-                
-                var initializeGimme = Prompt.GetYesNo(
-                    @" 🧐 Gimme has not been initialized in this directory. Do you want to run `init` here?", 
-                    defaultAnswer: false,
-                    GimmeConsoleExtensions.GetTextColor(console, TextColor.Info)
-                    );
-
-                    if(initializeGimme) {
-                        await app.ExecuteAsync(new string[] {InitializeCommand.NAME });
-                    }
+            if (!fileSystemService.FileExists(Constants.GIMME_SETTINGS_FILENAME))
+            {
+                await AskUserToInitialize(app, console);
             }
+            else
+            {
+                app.ShowHelp();
+            }
+        }
 
-            // var generator1 = new GeneratorModel()
-            // {
-            //     Name = "sample",
-            //     Prompts = new List<PromptModel>() {
-            //       {
-            //           new PromptModel() {
-            //             Name = "prompt name 1",
-            //           }
-            //       }
-            //     },
-            //     Actions = new List<ActionModel>() {
-            //       {
-            //           new ActionModel() {
-            //             Name = "action name 1",
-            //           }
-            //       }
-            //     }
-            // };
+        private static async Task AskUserToInitialize(CommandLineApplication app, IConsole console)
+        {
+            var initializeGimme = Prompt.GetYesNo(
+                @" 🧐 Gimme has not been initialized in this directory. Do you want to run `init` here?",
+                defaultAnswer: false,
+                GimmeConsoleExtensions.GetTextColor(console, TextColor.Info)
+                );
 
-            // var settingsModel = new GimmeSettingsModel()
-            // {
-            //     GeneratorsFiles = new List<string>() {
-            //         ""
-            //     }
-            // };
-
-            // var settingsJSONString = JsonSerializer.Serialize<GimmeSettingsModel>(settingsModel, new JsonSerializerOptions() {
-            //     WriteIndented = true
-            // });
-
-            // fileSystemService.WriteAllTextToFile(Constants.GIMME_SETTINGS_FILENAME,settingsJSONString);
-            
-            // console.WriteLine("Hello from Gimme!");
-            // console.WriteLine("GimmeSettings found " + gimmeSettingsExists);
+            if (initializeGimme)
+            {
+                await app.ExecuteAsync(new string[] { InitializeCommand.NAME });
+            }
         }
     }
 }

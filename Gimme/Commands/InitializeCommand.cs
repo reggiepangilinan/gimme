@@ -7,13 +7,13 @@ using McMaster.Extensions.CommandLineUtils;
 
 namespace Gimme.Commands
 {
-
     [Command
         (
             Name = InitializeCommand.NAME,
-            Description = @"Creates a new gimmeSettings.json in the currrent directory"
+            Description = @"✅ Gives you a new gimmeSettings.json in the currrent directory"
         ),
     ]
+    
     public class InitializeCommand
     {
         public const string NAME = "init";
