@@ -5,10 +5,11 @@ namespace Gimme.Models
 {
     public class GimmeSettingsModel
     {
-        public IEnumerable<GeneratorModel> Generators { get; set; }
+        public IEnumerable<string> GeneratorsFiles { get; set; }
     }
 
     public class GeneratorModel {
+        public string Name { get; set; }
         public string Description { get; set; }
         public IEnumerable<PromptModel> Prompts { get; set; }
         public IEnumerable<ActionModel> Actions { get; set; }

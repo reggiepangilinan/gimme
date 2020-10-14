@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Text.Json;
+using System.Threading.Tasks;
 using Gimme.Commands;
 using Gimme.Services;
 using McMaster.Extensions.CommandLineUtils;
@@ -14,6 +15,9 @@ namespace Gimme
            // Register services 
            ServiceCollection services = new ServiceCollection();
            services.AddSingleton<IFileSystemService,FileSystemService>();
+           services.AddSingleton<JsonSerializerOptions>( _ => new JsonSerializerOptions(){
+               WriteIndented = true
+           });
            ServiceProvider servideProvider = services.BuildServiceProvider();
 
            // Initialize command line application
