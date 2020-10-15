@@ -20,8 +20,8 @@ namespace Gimme.Services
         public bool FileExists(string relativePath)
             => File.Exists(Path.Combine(CurrentDirectory, relativePath));
 
-        public Validation<string, Unit> FileExistsValidation(string relativePath)
-            => File.Exists(Path.Combine(CurrentDirectory, relativePath)) ? Success<string,Unit>(unit) : Fail<string,Unit>($"😭 File not found - {relativePath}");
+        public Validation<Error, Unit> FileExistsValidation(string relativePath)
+            => File.Exists(Path.Combine(CurrentDirectory, relativePath)) ? Success<Error,Unit>(unit) : Fail<Error,Unit>($"😭 File not found - {relativePath}");
 
 
         public async Task<Option<GimmeSettingsModel>> GetCurrentGimmeSettingsAsync()
@@ -45,7 +45,7 @@ namespace Gimme.Services
 
     public interface IFileSystemService
     {
-        Validation<string, Unit> FileExistsValidation(string relativePath);
+        Validation<Error, Unit> FileExistsValidation(string relativePath);
         bool FileExists(string relativePath);
         void WriteAllTextToFile(string relativePath, string content);
         Task<Option<GimmeSettingsModel>> GetCurrentGimmeSettingsAsync();

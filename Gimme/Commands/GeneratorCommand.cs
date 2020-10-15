@@ -57,7 +57,7 @@ namespace Gimme.Commands
                     messages.Map(m => console.WriteLineWithColor(m, TextColor.Success)
                                             ),
                 Fail: errors =>
-                    errors.Map(m => console.WriteLineWithColor(m, TextColor.Error))
+                    errors.Map(m => console.WriteLineWithColor(m.Value.ToString(), TextColor.Error))
             );
         }
 
@@ -86,10 +86,10 @@ namespace Gimme.Commands
         }
 
 
-        private Validation<string, GeneratorModel> NewGeneratorMustNotExists(string newGeneratorFilename)
+        private Validation<Error, GeneratorModel> NewGeneratorMustNotExists(string newGeneratorFilename)
             => fileSystemService.FileExists(newGeneratorFilename)
-                ? Fail<string, GeneratorModel>($"🥶 Generator already exists - `{newGeneratorFilename}`")
-                : Success<string, GeneratorModel>(
+                ? Fail<Error, GeneratorModel>($"🥶 Generator already exists - `{newGeneratorFilename}`")
+                : Success<Error, GeneratorModel>(
                     new GeneratorModel()
                     {
                         Name = Name.ToLower(),
