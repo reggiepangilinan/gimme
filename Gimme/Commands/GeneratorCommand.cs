@@ -9,7 +9,6 @@ using Gimme.Models;
 using Gimme.Services;
 using Gimme.Validations;
 using McMaster.Extensions.CommandLineUtils;
-using System;
 using System.Linq;
 
 namespace Gimme.Commands
@@ -40,24 +39,30 @@ namespace Gimme.Commands
 
         public async Task OnExecute(CommandLineApplication app, IConsole console)
         {
-            var generatorFilename = $"generator.{Name.ToLower()}.json";
+            var withThisGeneratorFilename = $"generator.{Name.ToLower()}.json";
             (
-                (await fileSystemService.GetCurrentGimmeSettingsAsync()).MustExists(),
-                NewGeneratorMustNotExists(generatorFilename)
+                validateGimmeSettings: (await fileSystemService.GetCurrentGimmeSettingsAsync()).MustExists(),
+                validateGenerator: NewGeneratorMustNotExists(withThisGeneratorFilename)
             )
-            .Apply((item1, item2) => (item1, item2))
-            .Map(
-                values => List(
-                                CreateGeneratorFile(generatorFilename, newGenerator: values.Item2),
-                                UpdateGimmeSettingsGeneratorFiles(currentGimmeSettings: values.Item1, generatorFilename)
-                              )
+            .Apply
+            (
+
+                //TODO: Handle exceptions here?
+                (currentGimmeSettings, newGeneratorModel)
+                 => List(
+                           CreateGeneratorFile(withThisGeneratorFilename, newGeneratorModel),
+                           UpdateGimmeSettingsGeneratorFiles(currentGimmeSettings, withThisGeneratorFilename)
+                         )
             )
             .Match(
                 Succ: messages =>
-                    messages.Map(m => console.WriteLineWithColor(m, TextColor.Success)
-                                            ),
+                {
+                    messages.Map(m => console.WriteLineWithColor(m, TextColor.Success));
+                },
                 Fail: errors =>
-                    errors.Map(m => console.WriteLineWithColor(m.Value.ToString(), TextColor.Error))
+                {
+                    errors.Map(m => console.WriteLineWithColor(m.Value, TextColor.Error));
+                }
             );
         }
 
@@ -75,7 +80,7 @@ namespace Gimme.Commands
                                                     .GeneratorsFiles
                                                     .Append(new[] { newGeneratorFilename })
                                                     .ToList()
-                                                    .Where(x=> fileSystemService.FileExists(x))
+                                                    .Where(fileSystemService.FileExists)
                                                     .Distinct();
 
             var updatedGimmeSettingsText = JsonSerializer.Serialize<GimmeSettingsModel>(currentGimmeSettings, jsonSerializerOptions);

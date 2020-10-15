@@ -2,6 +2,7 @@ using System.Threading.Tasks;
 using Gimme.Extensions;
 using Gimme.Services;
 using LanguageExt;
+using static LanguageExt.Prelude;
 using McMaster.Extensions.CommandLineUtils;
 
 namespace Gimme.Commands {
@@ -34,23 +35,19 @@ The dotnet cli tool that gives you what you want 😎
         }
 
         public async Task OnExecute (CommandLineApplication app, IConsole console) {
-             await fileSystemService.FileExistsValidation(Constants.GIMME_SETTINGS_FILENAME)
-                .MatchAsync(
-                    FailAsync: async _ =>  await AskUserToInitialize (app, console).ToUnit(),
-                    SuccAsync: async _ =>  await Task.Run(()=> app.ShowHelp()).ToUnit());
-            
+            await fileSystemService.FileExistsValidation (Constants.GIMME_SETTINGS_FILENAME)
+                .MatchAsync (
+                    FailAsync: async _ => await AskUserToInitialize (app, console),
+                    SuccAsync : async _ => await Task.Run (() => app.ShowHelp ()).ToUnit ());
+
         }
 
-        private static async Task AskUserToInitialize (CommandLineApplication app, IConsole console) {
-            var initializeGimme = Prompt.GetYesNo (
+        private static async Task<Unit> AskUserToInitialize (CommandLineApplication app, IConsole console) => Prompt.GetYesNo (
                 @" 🧐 Gimme has not been initialized in this directory. Do you want to run `init` here?",
                 defaultAnswer : false,
                 GimmeConsoleExtensions.GetTextColor (console, TextColor.Info)
-            );
-
-            if (initializeGimme) {
-                await app.ExecuteAsync (new string[] { InitializeCommand.NAME });
-            }
-        }
+            ) ?
+            await app.ExecuteAsync (new string[] { InitializeCommand.NAME }).ToUnit () :
+            unit;
     }
 }
