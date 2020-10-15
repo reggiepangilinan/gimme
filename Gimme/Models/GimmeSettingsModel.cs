@@ -11,11 +11,11 @@ namespace Gimme.Models
     public class GeneratorModel {
         public string Name { get; set; }
         public string Description { get; set; }
-        public IEnumerable<PromptModel> Prompts { get; set; }
+        public IEnumerable<OptionModel> Options { get; set; }
         public IEnumerable<ActionModel> Actions { get; set; }
     }
 
-    public class PromptModel {
+    public class OptionModel {
         public string Name { get; set; }
     }
 

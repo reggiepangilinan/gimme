@@ -3,6 +3,8 @@ using System.IO;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Gimme.Models;
+using LanguageExt;
+using static LanguageExt.Prelude;
 
 namespace Gimme.Services
 {
@@ -18,10 +20,17 @@ namespace Gimme.Services
         public bool FileExists(string relativePath)
             => File.Exists(Path.Combine(CurrentDirectory, relativePath));
 
-        public async Task<GimmeSettingsModel> GetCurrentGimmeSettingsAsync()
+        public Validation<string, Unit> FileExistsValidation(string relativePath)
+            => File.Exists(Path.Combine(CurrentDirectory, relativePath)) ? Success<string,Unit>(unit) : Fail<string,Unit>($"😭 File not found - {relativePath}");
+
+
+        public async Task<Option<GimmeSettingsModel>> GetCurrentGimmeSettingsAsync()
         {
-            var settingText = await File.ReadAllTextAsync(Constants.GIMME_SETTINGS_FILENAME);
-            return JsonSerializer.Deserialize<GimmeSettingsModel>(settingText);
+            if(this.FileExists(Constants.GIMME_SETTINGS_FILENAME)) {
+                var settingText = await File.ReadAllTextAsync(Constants.GIMME_SETTINGS_FILENAME);
+                return Some(JsonSerializer.Deserialize<GimmeSettingsModel>(settingText));
+            }
+            return None;
         }
 
         
@@ -36,8 +45,9 @@ namespace Gimme.Services
 
     public interface IFileSystemService
     {
+        Validation<string, Unit> FileExistsValidation(string relativePath);
         bool FileExists(string relativePath);
         void WriteAllTextToFile(string relativePath, string content);
-        Task<GimmeSettingsModel> GetCurrentGimmeSettingsAsync();
+        Task<Option<GimmeSettingsModel>> GetCurrentGimmeSettingsAsync();
     }
 }

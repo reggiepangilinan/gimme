@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.IO;
-using System.Linq;
+using LanguageExt;
+using static LanguageExt.Prelude;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Gimme.Extensions;
@@ -9,6 +9,8 @@ using Gimme.Models;
 using Gimme.Services;
 using Gimme.Validations;
 using McMaster.Extensions.CommandLineUtils;
+using System;
+using System.Linq;
 
 namespace Gimme.Commands
 {
@@ -38,53 +40,37 @@ namespace Gimme.Commands
 
         public async Task OnExecute(CommandLineApplication app, IConsole console)
         {
-            var newGeneratorFilename = $"generator.{Name.ToLower()}.json";
+            var generatorFilename = $"generator.{Name.ToLower()}.json";
+            (
+                (await fileSystemService.GetCurrentGimmeSettingsAsync()).MustExists(),
+                NewGeneratorMustNotExists(generatorFilename)
+            )
+            .Apply((v1, v2) => (v1, v2))
+            .Map(
+                values => List(
+                                CreateGeneratorFile(generatorFilename, newGenerator: values.Item2),
+                                UpdateGimmeSettingsGeneratorFiles(currentGimmeSettings: values.Item1, generatorFilename)
+                              )
+            )
+            .Match(
+                Succ: messages =>
+                    messages.Map(m => console.WriteLineWithColor(m, TextColor.Success)
+                                            ),
+                Fail: errors =>
+                    errors.Map(m => console.WriteLineWithColor(m, TextColor.Error))
+            );
+        }
 
-            // Validate if generator already exists
-            if (fileSystemService.FileExists(newGeneratorFilename))
-            {
-                console
-                    .AppendEmptyLine()
-                    .WriteLineWithColor($"🥶 Generator already exists - `{newGeneratorFilename}`", TextColor.Error)
-                    .AppendEmptyLine();
-                return;
-            }
+        private string CreateGeneratorFile(string newGeneratorFilename, GeneratorModel newGenerator)
+        {
+            fileSystemService.WriteAllTextToFile(newGeneratorFilename, JsonSerializer.Serialize<GeneratorModel>(
+                newGenerator, jsonSerializerOptions));
 
-            var currentGimmeSettings = await fileSystemService.GetCurrentGimmeSettingsAsync();
+            return $"✅ Created generator `{newGeneratorFilename}`";
+        }
 
-            // Creates a new generator
-            var generatorText = JsonSerializer.Serialize<GeneratorModel>(
-                new GeneratorModel()
-                {
-                    Name = Name.ToLower(),
-                    Description = "Your generator description goes here.",
-                    Prompts = new List<PromptModel>()
-                    {
-                        {
-                            new PromptModel()
-                            {
-                                Name= ""
-                            }
-                        }
-                    },
-                    Actions = new List<ActionModel>()
-                    {
-                        {
-                            new ActionModel()
-                            {
-                                Name= ""
-                            }
-                        }
-                    },
-                }, jsonSerializerOptions);
-
-            fileSystemService.WriteAllTextToFile(newGeneratorFilename, generatorText);
-
-            console
-                 .AppendEmptyLine()
-                 .WriteLineWithColor($"✅ Created generator `{newGeneratorFilename}`", TextColor.Success);
-
-            // Update gimmeSettings.json file
+        private string UpdateGimmeSettingsGeneratorFiles(GimmeSettingsModel currentGimmeSettings, string newGeneratorFilename)
+        {
             currentGimmeSettings.GeneratorsFiles = currentGimmeSettings
                                                     .GeneratorsFiles
                                                     .Append(new[] { newGeneratorFilename })
@@ -96,8 +82,37 @@ namespace Gimme.Commands
 
             fileSystemService.WriteAllTextToFile(Constants.GIMME_SETTINGS_FILENAME, updatedGimmeSettingsText);
 
-            console.WriteLineWithColor($"✅ Updated file `{Constants.GIMME_SETTINGS_FILENAME}`", TextColor.Success)
-                 .AppendEmptyLine();
+            return $"✅ Updated file `{Constants.GIMME_SETTINGS_FILENAME}`";
         }
+
+
+        private Validation<string, GeneratorModel> NewGeneratorMustNotExists(string newGeneratorFilename)
+            => fileSystemService.FileExists(newGeneratorFilename)
+                ? Fail<string, GeneratorModel>($"🥶 Generator already exists - `{newGeneratorFilename}`")
+                : Success<string, GeneratorModel>(
+                    new GeneratorModel()
+                    {
+                        Name = Name.ToLower(),
+                        Description = "Your generator description goes here.",
+                        Options = new List<OptionModel>()
+                    {
+                        {
+                            new OptionModel()
+                            {
+                                Name= ""
+                            }
+                        }
+                    },
+                        Actions = new List<ActionModel>()
+                    {
+                        {
+                            new ActionModel()
+                            {
+                                Name= ""
+                            }
+                        }
+                    },
+                    });
+
     }
 }

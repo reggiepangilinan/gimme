@@ -28,11 +28,8 @@ namespace Gimme
            app.Conventions.UseDefaultConventions()
                           .UseConstructorInjection(servideProvider);;
 
+            // Read gimmeSettings
             var fileSystemService = servideProvider.GetService<IFileSystemService>();
-
-            if(fileSystemService.FileExists(Constants.GIMME_SETTINGS_FILENAME)) {
-
-            }    
 
             // Dynamically build sub commands
             var dynamicSubCommand = new CommandLineApplication();
