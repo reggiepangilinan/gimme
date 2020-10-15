@@ -45,7 +45,7 @@ namespace Gimme.Commands
                 (await fileSystemService.GetCurrentGimmeSettingsAsync()).MustExists(),
                 NewGeneratorMustNotExists(generatorFilename)
             )
-            .Apply((v1, v2) => (v1, v2))
+            .Apply((item1, item2) => (item1, item2))
             .Map(
                 values => List(
                                 CreateGeneratorFile(generatorFilename, newGenerator: values.Item2),
