@@ -48,59 +48,67 @@ namespace Gimme.Commands
             )
             .Apply
             (
-                (currentGimmeSettings, newGeneratorModel)
+                (withCurrentGimmeSettings, withNewGeneratorModel)
                  =>
                     (
-                      from generatorFileCreatedMessage in CreateGeneratorFile(withThisGeneratorFilename, newGeneratorModel)
-                      from gimmeSettingsUpdateMessage in UpdateGimmeSettingsGeneratorFiles(currentGimmeSettings, withThisGeneratorFilename)
+                      from generatorFileCreatedMessage in CreateGeneratorFile(withThisGeneratorFilename, withNewGeneratorModel)
+                      from gimmeSettingsUpdateMessage in UpdateGimmeSettingsGeneratorFiles(withCurrentGimmeSettings, withThisGeneratorFilename)
                       select List(generatorFileCreatedMessage, gimmeSettingsUpdateMessage)
                     )
             )
             .Match
             (
-                Succ: persistResults =>
+                Succ: result =>
                 {
-                    persistResults
-                        .Match(Right: messages =>
-                        {
-                            messages.Map(m => console.WriteLineWithColor(m, TextColor.Success));
-                        },
-                        Left: writeFileError =>
-                        {
-                            console.WriteLineWithColor(writeFileError.Message, TextColor.Error);
-                        });
+                    result
+                        .Match
+                            (
+                                Right: messages =>
+                                {
+                                    messages.Map(console.WriteLineSuccess);
+                                },
+                                Left: writeFileError =>
+                                {
+                                    console.WriteLineError(writeFileError);
+                                }
+                            );
                 },
                 Fail: validationErrors =>
                 {
-                    validationErrors.Map(e => console.WriteLineWithColor(e.Message, TextColor.Error));
+                    validationErrors.Map(console.WriteLineError);
                 }
             );
         }
 
         private Either<Error, string> CreateGeneratorFile(string newGeneratorFilename, GeneratorModel newGenerator)
-            => fileSystemService
-                    .WriteAllTextToFile(
-                            newGeneratorFilename,
-                            JsonSerializer.Serialize<GeneratorModel>(newGenerator, jsonSerializerOptions)
-                    )
-                    .Map(x => $"✅ Created generator `{newGeneratorFilename}`");
+        => fileSystemService.TryToSerialize<GeneratorModel>(fromValue: newGenerator)
+                             .Match(
+                                 Succ: fileTextContent => fileSystemService
+                                                        .WriteAllTextToFile(newGeneratorFilename, fileTextContent)
+                                                        .Map(_ => $"✅ Created generator `{newGeneratorFilename}`"),
+                                 Fail: e => Left<Error, string>(Error.New(e))
+                             );
+
+
+
 
         private Either<Error, string> UpdateGimmeSettingsGeneratorFiles(GimmeSettingsModel currentGimmeSettings, string newGeneratorFilename)
-            =>
-            Try(() =>
-            {
-                currentGimmeSettings.GeneratorsFiles = currentGimmeSettings
-                                        .GeneratorsFiles
-                                        .Append(new[] { newGeneratorFilename })
-                                        .ToList()
-                                        .Where(fileSystemService.FileExists)
-                                        .Distinct();
-                var updatedGimmeSettingsText = JsonSerializer.Serialize<GimmeSettingsModel>(currentGimmeSettings, jsonSerializerOptions);
-                return fileSystemService.WriteAllTextToFile(Constants.GIMME_SETTINGS_FILENAME, updatedGimmeSettingsText);
-            })
-            .ToEither()
-            .MapLeft(Error.New)
-            .Map(x => $"✅ Updated file `{Constants.GIMME_SETTINGS_FILENAME}`");
+        {
+            currentGimmeSettings.GeneratorsFiles = currentGimmeSettings
+                                    .GeneratorsFiles
+                                    .Append(new[] { newGeneratorFilename })
+                                    .ToList()
+                                    .Where(fileSystemService.FileExists)
+                                    .Distinct();
+
+            return fileSystemService.TryToSerialize<GimmeSettingsModel>(fromValue: currentGimmeSettings)
+                         .Match(
+                             Succ: fileTextContent => fileSystemService
+                                                    .WriteAllTextToFile(newGeneratorFilename, fileTextContent)
+                                                    .Map(_ => $"✅ Updated file `{Constants.GIMME_SETTINGS_FILENAME}`"),
+                             Fail: e => Left<Error, string>(Error.New(e))
+                         );
+        }
 
 
         private Validation<Error, GeneratorModel> NewGeneratorMustNotExists(string newGeneratorFilename)

@@ -1,11 +1,12 @@
 using System;
+using LanguageExt.Common;
 using McMaster.Extensions.CommandLineUtils;
 
 namespace Gimme.Extensions
 {
     public static class GimmeConsoleExtensions
     {
-       public static ConsoleColor GetTextColor(IConsole console, TextColor textColor)
+        public static ConsoleColor GetTextColor(IConsole console, TextColor textColor)
         {
             return textColor switch
             {
@@ -24,6 +25,26 @@ namespace Gimme.Extensions
             console.ResetColor();
             return console;
         }
+
+        public static IConsole WriteLineSuccess(this IConsole console, string message)
+         => WriteLineWithColor(console, message, TextColor.Success);
+
+        public static IConsole WriteLineError(this IConsole console, string message)
+         => WriteLineWithColor(console, message, TextColor.Error);
+
+        public static IConsole WriteLineError(this IConsole console, Error error)
+         => WriteLineWithColor(console, error.Message, TextColor.Error);
+
+        public static IConsole WriteLineWarning(this IConsole console, string message)
+         => WriteLineWithColor(console, message, TextColor.Warning);
+
+        public static IConsole WriteLineInfo(this IConsole console, string message)
+         => WriteLineWithColor(console, message, TextColor.Info);
+
+        public static IConsole WriteLineDefault(this IConsole console, string message)
+         => WriteLineWithColor(console, message, TextColor.Default);
+
+
 
 
         public static IConsole AppendEmptyLine(this IConsole console)
