@@ -18,6 +18,7 @@ namespace Gimme
             // Register services 
             ServiceCollection services = new ServiceCollection();
             services.AddSingleton<IFileSystemService, FileSystemService>();
+            services.AddSingleton<ICommandBuilderService, CommandBuilderService>();
             services.AddSingleton<JsonSerializerOptions>(_ => new JsonSerializerOptions()
             {
                 PropertyNameCaseInsensitive = false,
@@ -34,6 +35,10 @@ namespace Gimme
             // Read gimmeSettings
             var fileSystemService = servideProvider.GetService<IFileSystemService>();
             var console = servideProvider.GetService<IConsole>() ?? PhysicalConsole.Singleton;
+    
+            //var x = from currentSettings in fileSystemService.GetCurrentGimmeSettings()
+            
+            
 
             // Dynamically build sub commands
             var dynamicSubCommand = new CommandLineApplication();
@@ -51,7 +56,11 @@ namespace Gimme
                 return Task.Run(() => Console.WriteLine(@"Hello from dynamic command 👋"));
             });
             app.AddSubcommand(dynamicSubCommand);
+            await ExecuteCommandAsync(args, app, console);
+        }
 
+        private static async Task ExecuteCommandAsync(string[] args, CommandLineApplication<GimmeCommand> app, IConsole console)
+        {
             try
             {
                 // Run application                          

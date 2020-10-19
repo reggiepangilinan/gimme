@@ -114,8 +114,6 @@ namespace Gimme.Services
                 await File.WriteAllTextAsync(Path.Combine(CurrentDirectory, relativePath), content);
                 return unit;
             });
-
-
     }
 
     public interface IFileSystemService
