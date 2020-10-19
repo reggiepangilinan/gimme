@@ -1,5 +1,7 @@
 using System;
+using LanguageExt;
 using LanguageExt.Common;
+using static LanguageExt.Prelude;
 using McMaster.Extensions.CommandLineUtils;
 
 namespace Gimme.Extensions
@@ -44,8 +46,7 @@ namespace Gimme.Extensions
         public static IConsole WriteLineDefault(this IConsole console, string message)
          => WriteLineWithColor(console, message, TextColor.Default);
 
-
-
+        public static Unit ToUnit(this IConsole console) => unit;
 
         public static IConsole AppendEmptyLine(this IConsole console)
         {
@@ -53,11 +54,23 @@ namespace Gimme.Extensions
             return console;
         }
 
-
         public static IConsole SetForegroundColor(this IConsole console, TextColor textColor)
         {
             console.ForegroundColor = GetTextColor(console, textColor);
             return console;
+        }
+
+        public static Unit ResultTo(this Validation<Error, Lst<string>> validations, IConsole console) {
+            return validations.Match(
+                Succ: messages =>
+                {
+                    messages.Map(console.WriteLineSuccess);
+                },
+                Fail: errors =>
+                {
+                    errors.Map(console.WriteLineError);
+                }
+            );
         }
     }
 

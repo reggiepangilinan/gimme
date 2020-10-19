@@ -2,8 +2,6 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using LanguageExt;
 using static LanguageExt.Prelude;
-using System.Text.Json;
-using System.Threading.Tasks;
 using Gimme.Extensions;
 using static Gimme.Extensions.All;
 using Gimme.Models;
@@ -31,69 +29,37 @@ namespace Gimme.Commands
         public string Name { get; }
 
         private readonly IFileSystemService fileSystemService;
-        private readonly JsonSerializerOptions jsonSerializerOptions;
 
-        public GeneratorCommand(IFileSystemService fileSystemService, JsonSerializerOptions jsonSerializerOptions)
+        public GeneratorCommand(IFileSystemService fileSystemService)
         {
             this.fileSystemService = fileSystemService;
-            this.jsonSerializerOptions = jsonSerializerOptions;
         }
 
-        public async Task OnExecute(CommandLineApplication app, IConsole console)
+        public void OnExecute(CommandLineApplication app, IConsole console)
         {
             var withThisGeneratorFilename = $"generator.{Name.ToLower()}.json";
             (
-                validateGimmeSettings: (await fileSystemService.GetCurrentGimmeSettingsAsync()).MustExists(),
-                validateGenerator: NewGeneratorMustNotExists(withThisGeneratorFilename)
+                from withCurrentGimmeSettings in fileSystemService.GetCurrentGimmeSettings().MustExists()
+                from withNewGeneratorModel in NewGeneratorMustNotExists(withThisGeneratorFilename)
+                from messageNewGenerator in CreateGeneratorFile(withThisGeneratorFilename, withNewGeneratorModel)
+                from messageUpdateSettings in UpdateGimmeSettingsGeneratorFiles(withCurrentGimmeSettings, withThisGeneratorFilename)
+                select List(messageNewGenerator, messageUpdateSettings)
             )
-            .Apply
-            (
-                (withCurrentGimmeSettings, withNewGeneratorModel)
-                 =>
-                    (
-                      from generatorFileCreatedMessage in CreateGeneratorFile(withThisGeneratorFilename, withNewGeneratorModel)
-                      from gimmeSettingsUpdateMessage in UpdateGimmeSettingsGeneratorFiles(withCurrentGimmeSettings, withThisGeneratorFilename)
-                      select List(generatorFileCreatedMessage, gimmeSettingsUpdateMessage)
-                    )
-            )
-            .Match
-            (
-                Succ: result =>
-                {
-                    result
-                        .Match
-                            (
-                                Right: messages =>
-                                {
-                                    messages.Map(console.WriteLineSuccess);
-                                },
-                                Left: writeFileError =>
-                                {
-                                    console.WriteLineError(writeFileError);
-                                }
-                            );
-                },
-                Fail: validationErrors =>
-                {
-                    validationErrors.Map(console.WriteLineError);
-                }
-            );
+            .ResultTo(console);
         }
 
-        private Either<Error, string> CreateGeneratorFile(string newGeneratorFilename, GeneratorModel newGenerator)
+        private Validation<Error, string> CreateGeneratorFile(string newGeneratorFilename, GeneratorModel newGenerator)
         => fileSystemService.TryToSerialize<GeneratorModel>(fromValue: newGenerator)
                              .Match(
                                  Succ: fileTextContent => fileSystemService
                                                         .WriteAllTextToFile(newGeneratorFilename, fileTextContent)
                                                         .Map(_ => $"✅ Created generator `{newGeneratorFilename}`"),
                                  Fail: e => Left<Error, string>(Error.New(e))
-                             );
+                             ).ToValidation();
 
-
-
-
-        private Either<Error, string> UpdateGimmeSettingsGeneratorFiles(GimmeSettingsModel currentGimmeSettings, string newGeneratorFilename)
+        private Validation<Error, string> UpdateGimmeSettingsGeneratorFiles(GimmeSettingsModel currentGimmeSettings, string newGeneratorFilename)
         {
+            //TODO: Don't mutate
             currentGimmeSettings.GeneratorsFiles = currentGimmeSettings
                                     .GeneratorsFiles
                                     .Append(new[] { newGeneratorFilename })
@@ -107,9 +73,8 @@ namespace Gimme.Commands
                                                     .WriteAllTextToFile(newGeneratorFilename, fileTextContent)
                                                     .Map(_ => $"✅ Updated file `{Constants.GIMME_SETTINGS_FILENAME}`"),
                              Fail: e => Left<Error, string>(Error.New(e))
-                         );
+                         ).ToValidation();
         }
-
 
         private Validation<Error, GeneratorModel> NewGeneratorMustNotExists(string newGeneratorFilename)
             => fileSystemService.FileExists(newGeneratorFilename)
