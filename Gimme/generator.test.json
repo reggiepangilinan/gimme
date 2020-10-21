@@ -1,0 +1,15 @@
+{
+  "Name": "test",
+  "Description": "Your generator description goes here.",
+  "Options": [
+    {
+      "Template": "",
+      "Description": ""
+    }
+  ],
+  "Actions": [
+    {
+      "Name": ""
+    }
+  ]
+}

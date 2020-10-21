@@ -1,11 +1,12 @@
 using System.Collections.Generic;
 using System.Text.Json;
+using Gimme.Core.Models;
 using Gimme.Extensions;
-using Gimme.Models;
 using Gimme.Services;
 using McMaster.Extensions.CommandLineUtils;
 
-namespace Gimme.Commands {
+namespace Gimme.Commands
+{
     [Command (
         Name = InitializeCommand.NAME,
         Description = @"✅ Gives you a new gimmeSettings.json in the currrent directory"

@@ -1,12 +1,13 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Gimme.Commands;
 using Gimme.Extensions;
 using Gimme.Services;
+using LanguageExt;
 using McMaster.Extensions.CommandLineUtils;
 using Microsoft.Extensions.DependencyInjection;
+using static LanguageExt.Prelude;
 
 namespace Gimme
 {
@@ -19,6 +20,7 @@ namespace Gimme
             ServiceCollection services = new ServiceCollection();
             services.AddSingleton<IFileSystemService, FileSystemService>();
             services.AddSingleton<ICommandBuilderService, CommandBuilderService>();
+            services.AddSingleton<IGeneratorCommandService, GeneratorCommandService>();
             services.AddSingleton<JsonSerializerOptions>(_ => new JsonSerializerOptions()
             {
                 PropertyNameCaseInsensitive = false,
@@ -34,28 +36,18 @@ namespace Gimme
 
             // Read gimmeSettings
             var fileSystemService = servideProvider.GetService<IFileSystemService>();
+            var generatorCommandService = servideProvider.GetService<IGeneratorCommandService>();
             var console = servideProvider.GetService<IConsole>() ?? PhysicalConsole.Singleton;
-    
-            //var x = from currentSettings in fileSystemService.GetCurrentGimmeSettings()
-            
-            
 
-            // Dynamically build sub commands
-            var dynamicSubCommand = new CommandLineApplication();
-            dynamicSubCommand.HelpOption();
-            dynamicSubCommand.Name = "dynamic";
-            dynamicSubCommand.Description = "⚡️ Some description about the command";
+            var totalCommandGenerated = fileSystemService.GetCurrentGimmeSettings()
+                    .Some(settings =>
+                            generatorCommandService.GetGenerators(settings)
+                            .Map(generator => Try(() => generatorCommandService.BuildCommand(generator)))
+                            .Succs()
+                            .Map(app.AddGimmeSubcommand)
+                            .Length()
+                    ).None(() => 0);
 
-            var subjectOption = new CommandOption("-s|--subject", CommandOptionType.SingleValue);
-            subjectOption.IsRequired(allowEmptyStrings: false, $"{subjectOption.LongName} is required.");
-            subjectOption.Description = "Some option";
-
-            dynamicSubCommand.Options.Add(subjectOption);
-            dynamicSubCommand.OnExecuteAsync(cancellationToken =>
-            {
-                return Task.Run(() => Console.WriteLine(@"Hello from dynamic command 👋"));
-            });
-            app.AddSubcommand(dynamicSubCommand);
             await ExecuteCommandAsync(args, app, console);
         }
 
