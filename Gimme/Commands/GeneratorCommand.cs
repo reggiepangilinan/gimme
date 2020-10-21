@@ -16,10 +16,9 @@ namespace Gimme.Commands
     [Command
         (
             Name = GeneratorCommand.NAME,
-            Description = @"✅ Gives you a new generator.{name}.json file in the currrent directory"
-        ),
+            Description = @"⚡️ Gives you a new generator.{name}.json file in the currrent directory"
+        )
     ]
-    [GimmeSettingsFileMustExistsValidation()]
     public class GeneratorCommand
     {
         public const string NAME = "generator";
@@ -83,14 +82,14 @@ namespace Gimme.Commands
                     new GeneratorModel()
                     {
                         Name = Name.ToLower(),
-                        Description = "Your generator description goes here.",
+                        Description = "✨ Your generator description goes here.",
                         Options = new List<OptionModel>()
                     {
                         {
                             new OptionModel()
                             {
-                                Template= "",
-                                Description=""
+                                Template="-n|--name",
+                                Description="Option desciption"
                             }
                         }
                     },
@@ -99,7 +98,7 @@ namespace Gimme.Commands
                         {
                             new ActionModel()
                             {
-                                Name= ""
+                                Name= "Some action"
                             }
                         }
                     },

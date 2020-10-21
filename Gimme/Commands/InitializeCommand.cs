@@ -9,7 +9,7 @@ namespace Gimme.Commands
 {
     [Command (
         Name = InitializeCommand.NAME,
-        Description = @"✅ Gives you a new gimmeSettings.json in the currrent directory"
+        Description = @"⚡️ Gives you a new gimmeSettings.json in the currrent directory"
     ), ]
 
     public class InitializeCommand {

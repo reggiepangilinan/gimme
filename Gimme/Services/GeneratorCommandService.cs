@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 using Gimme.Core.Models;
 using Gimme.Extensions;
 using LanguageExt;
+using LanguageExt.Common;
 using McMaster.Extensions.CommandLineUtils;
 using static LanguageExt.Prelude;
 
@@ -13,12 +15,10 @@ namespace Gimme.Services
     public class GeneratorCommandService : IGeneratorCommandService
     {
         private readonly IFileSystemService fileSystemService;
-        private readonly IConsole console;
 
-        public GeneratorCommandService(IFileSystemService fileSystemService, IConsole console)
+        public GeneratorCommandService(IFileSystemService fileSystemService)
         {
             this.fileSystemService = fileSystemService;
-            this.console = console;
         }
         public Lst<GeneratorModel> GetGenerators(GimmeSettingsModel fromSettings)
          => fromSettings.GeneratorsFiles
@@ -27,15 +27,25 @@ namespace Gimme.Services
                         .Succs()
                         .Freeze();
 
-        public CommandLineApplication BuildCommand(GeneratorModel generator)
+        public (string, Option<CommandLineApplication>, Lst<Error>) BuildCommand(GeneratorModel generator)
         {
+            string generatorName = string.IsNullOrWhiteSpace(generator.Name) ? "unknown generator" : generator.Name;
+
+            var validator = new GeneratorModelValidator();
+            var result = validator.Validate(generator);
+
+            if(!result.IsValid)
+            {
+                return (generatorName, Option<CommandLineApplication>.None, result.Errors.Map(x => Error.New(x.ErrorMessage)).Freeze());
+            }
+
             // Dynamically build sub commands
             var command = new CommandLineApplication();
             command.HelpOption();
             command.Name = generator.Name;
             command.Description = generator.Description;
 
-            toList(generator.Options)
+            toList(generator.Options ?? Lst<OptionModel>.Empty)
             .Map(ToCommandOption)
             .Map(command.Options.AddCommandOption);
 
@@ -45,9 +55,9 @@ namespace Gimme.Services
             // dynamicSubCommand.Options.Add(subjectOption);
             command.OnExecuteAsync(cancellationToken =>
             {
-                return Task.Run(() => console.WriteLine(@"Hello from dynamic command 👋"));
+                return Task.Run(() => PhysicalConsole.Singleton.WriteLine(@"Hello from dynamic command 👋"));
             });
-            return command;
+            return (generatorName, Option<CommandLineApplication>.Some(command), Lst<Error>.Empty);;
         }
 
         private static CommandOption ToCommandOption(OptionModel optionModel)
@@ -61,6 +71,6 @@ namespace Gimme.Services
     public interface IGeneratorCommandService
     {
         Lst<GeneratorModel> GetGenerators(GimmeSettingsModel fromSettings);
-        CommandLineApplication BuildCommand(GeneratorModel generator);
+        (string, Option<CommandLineApplication>, Lst<Error>) BuildCommand(GeneratorModel generator);
     }
 }

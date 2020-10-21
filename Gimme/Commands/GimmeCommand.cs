@@ -26,7 +26,8 @@ The dotnet cli tool that gives you what you want 😎
         "
         ),
         Subcommand(typeof(Commands.InitializeCommand)),
-        Subcommand(typeof(Commands.GeneratorCommand))
+        Subcommand(typeof(Commands.GeneratorCommand)),
+        Subcommand(typeof(GeneratorDebugCommand))
     ]
     public class GimmeCommand
     {
@@ -41,7 +42,9 @@ The dotnet cli tool that gives you what you want 😎
             => fileSystemService.GetCurrentGimmeSettings()
                     .Match(
                                  None: () => AskUserToInitialize(app, console),
-                                 Some: _ =>  app.ShowHelp()
+                                 Some: _ =>  {
+                                                app.ShowHelp();
+                                             }
                                 );
     
         private Unit Execute(CommandLineApplication app) {
@@ -49,7 +52,7 @@ The dotnet cli tool that gives you what you want 😎
             return unit;
         }
 
-        private Unit AskUserToInitialize(CommandLineApplication app, IConsole console) => Prompt.GetYesNo(
+        public Unit AskUserToInitialize(CommandLineApplication app, IConsole console) => Prompt.GetYesNo(
                 @" 🧐 Gimme has not been initialized in this directory. Do you want to run `init` here?",
                 defaultAnswer: false,
                 GimmeConsoleExtensions.GetTextColor(console, TextColor.Info)
