@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Text.Json;
+using Gimme.Core.Extensions;
 using Gimme.Core.Models;
-using Gimme.Extensions;
 using Gimme.Services;
 using McMaster.Extensions.CommandLineUtils;
 
@@ -34,7 +34,7 @@ namespace Gimme.Commands
 
             fileSystemService.WriteAllTextToFile (Constants.GIMME_SETTINGS_FILENAME, settingsText);
 
-            console.WriteLineWithColor ($"✅ Created file {Constants.GIMME_SETTINGS_FILENAME}", TextColor.Success);
+            console.WriteLineWithColor ($"✅ Created file {Constants.GIMME_SETTINGS_FILENAME}", ConsoleTextColor.Success);
         }
     }
 }

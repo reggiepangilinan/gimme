@@ -1,7 +1,6 @@
-using Gimme.Extensions;
-using LanguageExt;
 using static LanguageExt.Prelude;
 using McMaster.Extensions.CommandLineUtils;
+using Gimme.Core.Extensions;
 
 namespace Gimme.Commands
 {
@@ -16,27 +15,26 @@ namespace Gimme.Commands
         public const string NAME = "generator-debug";
 
         public void OnExecute(CommandLineApplication app, IConsole console)
-        {
-            if (StartUpLogs.NoErrors)
-            {
-                console.WriteLineSuccess("✅ No errors detected when trying to building your generators.");
-            }
-            else
-            {
-                StartUpLogs.Result.Map(x =>
-                {
-                    if (x.Item3.IsEmpty && x.Item2.IsSome)
-                    {
-                        console.WriteLineSuccess($"✅ Generator {x.Item1} loaded");
-                    }
-                    else
-                    {
-                        console.WriteLineInfo($"❗️ Generator {x.Item1} has validation errors");
-                        x.Item3.Map(y => console.WriteLineWarning("  - " + y.Message));
-                    }
-                    return unit;
-                });
-            }
-        }
+            =>
+            StartUpLogs
+            .BuildGeneratorResults
+            .Match
+            (
+                None: () => console.WriteLineInfo("ℹ️  You don't have any generators."),
+                Some: results =>
+                      results.Map(valueOf =>
+                        {
+                            if (valueOf.errors.IsEmpty && valueOf.cli.IsSome)
+                            {
+                                console.WriteLineSuccess($"✅ Generator `{valueOf.generatorName}` loaded");
+                            }
+                            else
+                            {
+                                console.WriteLineInfo($"❗️ Generator {valueOf.generatorName} has validation errors");
+                                valueOf.Item3.Map(y => console.WriteLineWarning("  - " + y.Message));
+                            }
+                            return unit;
+                        })
+            );
     }
 }

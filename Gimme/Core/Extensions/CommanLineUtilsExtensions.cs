@@ -1,7 +1,7 @@
 using Gimme.Commands;
 using McMaster.Extensions.CommandLineUtils;
 
-namespace Gimme.Extensions
+namespace Gimme.Core.Extensions
 {
     public static class CommanLineUtilsExtensions
     {

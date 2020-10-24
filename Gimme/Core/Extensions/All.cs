@@ -3,7 +3,7 @@ using LanguageExt;
 using LanguageExt.Common;
 using static LanguageExt.Prelude;
 
-namespace Gimme.Extensions
+namespace Gimme.Core.Extensions
 {
     public static class All
     {

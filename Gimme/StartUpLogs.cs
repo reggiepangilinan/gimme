@@ -1,16 +1,22 @@
 using System.Linq;
 using LanguageExt;
 using LanguageExt.Common;
+using static LanguageExt.Prelude;
 using McMaster.Extensions.CommandLineUtils;
 
 namespace Gimme
 {
-    public static class StartUpLogs {
-        private static Lst<(string, Option<CommandLineApplication>, Lst<Error>)>  _buildGeneratorResults;
+    public static class StartUpLogs
+    {
+        private static Lst<(string, Option<CommandLineApplication>, Lst<Error>)> _buildGeneratorResults;
 
-        public static bool NoErrors => _buildGeneratorResults.Length() <= 0 || _buildGeneratorResults.Map(x=> x.Item3).SelectMany(y=> y).Count() <= 0;
-
-        public static Lst<(string, Option<CommandLineApplication>, Lst<Error>)> Result { get => _buildGeneratorResults; }
+        public static Option<Lst<(string generatorName, Option<CommandLineApplication> cli, Lst<Error> errors)>> BuildGeneratorResults 
+        { 
+            get => 
+            _buildGeneratorResults.Length() <= 0
+            ? None 
+            : Some(_buildGeneratorResults); 
+        }
 
         public static void Set(Lst<(string, Option<CommandLineApplication>, Lst<Error>)> buildGeneratorResults)
         {

@@ -2,7 +2,7 @@
 using System.Text.Json;
 using System.Threading.Tasks;
 using Gimme.Commands;
-using Gimme.Extensions;
+using Gimme.Core.Extensions;
 using Gimme.Services;
 using LanguageExt;
 using LanguageExt.Common;

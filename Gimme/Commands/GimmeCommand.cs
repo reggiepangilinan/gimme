@@ -1,9 +1,9 @@
 using System.Threading.Tasks;
-using Gimme.Extensions;
 using Gimme.Services;
 using LanguageExt;
 using static LanguageExt.Prelude;
 using McMaster.Extensions.CommandLineUtils;
+using Gimme.Core.Extensions;
 
 namespace Gimme.Commands
 {
@@ -55,7 +55,7 @@ The dotnet cli tool that gives you what you want 😎
         public Unit AskUserToInitialize(CommandLineApplication app, IConsole console) => Prompt.GetYesNo(
                 @" 🧐 Gimme has not been initialized in this directory. Do you want to run `init` here?",
                 defaultAnswer: false,
-                GimmeConsoleExtensions.GetTextColor(console, TextColor.Info)
+                GimmeConsoleExtensions.GetTextColor(console, ConsoleTextColor.Info)
             ) ?
             Execute(app) :
             unit;

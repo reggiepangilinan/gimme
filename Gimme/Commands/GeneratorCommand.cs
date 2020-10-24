@@ -1,15 +1,15 @@
 using Gimme.Core.Models;
 using Gimme.Core.Validators;
-using Gimme.Extensions;
 using Gimme.Services;
 using LanguageExt;
 using LanguageExt.Common;
 using McMaster.Extensions.CommandLineUtils;
-using static Gimme.Extensions.All;
+using static Gimme.Core.Extensions.All;
 using static LanguageExt.Prelude;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using Gimme.Core.Extensions;
 
 namespace Gimme.Commands
 {
