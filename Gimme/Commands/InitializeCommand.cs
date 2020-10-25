@@ -1,39 +1,57 @@
 using System.Collections.Generic;
-using System.Text.Json;
-using Gimme.Extensions;
-using Gimme.Models;
+using Gimme.Core.Extensions;
+using Gimme.Core.Models;
 using Gimme.Services;
+using LanguageExt;
+using LanguageExt.Common;
 using McMaster.Extensions.CommandLineUtils;
+using static LanguageExt.Prelude;
 
-namespace Gimme.Commands {
-    [Command (
+namespace Gimme.Commands
+{
+    [Command(
         Name = InitializeCommand.NAME,
-        Description = @"✅ Gives you a new gimmeSettings.json in the currrent directory"
-    ), ]
+        Description = @"⚡️ Gives you a new gimmeSettings.json in the currrent directory"
+    ),]
 
-    public class InitializeCommand {
+    public class InitializeCommand
+    {
         public const string NAME = "init";
-
         private readonly IFileSystemService fileSystemService;
-        private readonly JsonSerializerOptions jsonSerializerOptions;
 
-        public InitializeCommand (IFileSystemService fileSystemService, JsonSerializerOptions jsonSerializerOptions) {
+        public InitializeCommand(IFileSystemService fileSystemService)
+        {
             this.fileSystemService = fileSystemService;
-            this.jsonSerializerOptions = jsonSerializerOptions;
         }
 
-        public void OnExecute (CommandLineApplication app, IConsole console) {
-            // Can't initialize twice so this guard should be here.
-            if (fileSystemService.FileExists (Constants.GIMME_SETTINGS_FILENAME)) return;
+        private GimmeSettingsModel DefaultGimmeSettings =>
+            new GimmeSettingsModel()
+            {
+                GeneratorsFiles = new List<string>()
+            };
 
-            var settingsText = JsonSerializer.Serialize<GimmeSettingsModel> (
-                new GimmeSettingsModel () {
-                    GeneratorsFiles = new List<string> ()
-                }, jsonSerializerOptions);
+        public void OnExecute(CommandLineApplication app, IConsole console)
+            => match(fileSystemService.GetCurrentGimmeSettings(),
+                Some: _  => console
+                            .WriteLineInfo($"You already have an existing {Constants.GIMME_SETTINGS_FILENAME} file in this directory.")
+                            .ToUnit(), 
+                None: () =>
+                    (
+                        from messageInitialized in InitializeGimmeSettings(DefaultGimmeSettings)
+                        select messageInitialized
+                    )
+                    .ResultTo(console)
+                    .ToUnit()
+                );
+        
+        private Validation<Error, string> InitializeGimmeSettings(GimmeSettingsModel defaultSettings)
+            => fileSystemService.TryToSerialize<GimmeSettingsModel>(fromValue: defaultSettings)
+                                .Match(
+                                    Succ: fileTextContent => fileSystemService
+                                                            .WriteAllTextToFile(Constants.GIMME_SETTINGS_FILENAME, fileTextContent)
+                                                            .Map(_ => $"✅ Created file {Constants.GIMME_SETTINGS_FILENAME}"),
+                                    Fail: e => Left<Error, string>(Error.New(e))
+                                ).ToValidation();
 
-            fileSystemService.WriteAllTextToFile (Constants.GIMME_SETTINGS_FILENAME, settingsText);
-
-            console.WriteLineWithColor ($"✅ Created file {Constants.GIMME_SETTINGS_FILENAME}", TextColor.Success);
-        }
     }
 }

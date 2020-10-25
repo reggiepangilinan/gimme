@@ -1,9 +1,9 @@
 using System.Threading.Tasks;
-using Gimme.Extensions;
 using Gimme.Services;
 using LanguageExt;
 using static LanguageExt.Prelude;
 using McMaster.Extensions.CommandLineUtils;
+using Gimme.Core.Extensions;
 
 namespace Gimme.Commands
 {
@@ -26,7 +26,8 @@ The dotnet cli tool that gives you what you want 😎
         "
         ),
         Subcommand(typeof(Commands.InitializeCommand)),
-        Subcommand(typeof(Commands.GeneratorCommand))
+        Subcommand(typeof(Commands.GeneratorCommand)),
+        Subcommand(typeof(GeneratorDebugCommand))
     ]
     public class GimmeCommand
     {
@@ -37,21 +38,26 @@ The dotnet cli tool that gives you what you want 😎
             this.fileSystemService = fileSystemService;
         }
 
-        public async Task OnExecute(CommandLineApplication app, IConsole console)
-        {
-            await (await fileSystemService.GetCurrentGimmeSettingsAsync())
-                    .MatchAsync(
-                                 None: async () => await AskUserToInitialize(app, console),
-                                 Some: async _ => await Task.Run(() => app.ShowHelp()).ToUnit()
+        public void OnExecute(CommandLineApplication app, IConsole console)
+            => fileSystemService.GetCurrentGimmeSettings()
+                    .Match(
+                                 None: () => AskUserToInitialize(app, console),
+                                 Some: _ =>  {
+                                                app.ShowHelp();
+                                             }
                                 );
+    
+        private Unit Execute(CommandLineApplication app) {
+            app.Execute(new string[] { InitializeCommand.NAME });
+            return unit;
         }
 
-        private static async Task<Unit> AskUserToInitialize(CommandLineApplication app, IConsole console) => Prompt.GetYesNo(
+        public Unit AskUserToInitialize(CommandLineApplication app, IConsole console) => Prompt.GetYesNo(
                 @" 🧐 Gimme has not been initialized in this directory. Do you want to run `init` here?",
                 defaultAnswer: false,
-                GimmeConsoleExtensions.GetTextColor(console, TextColor.Info)
+                GimmeConsoleExtensions.GetTextColor(console, ConsoleTextColor.Info)
             ) ?
-            await app.ExecuteAsync(new string[] { InitializeCommand.NAME }).ToUnit() :
+            Execute(app) :
             unit;
     }
 }

@@ -1,25 +1,24 @@
+using Gimme.Core.Models;
+using Gimme.Core.Validators;
+using Gimme.Services;
+using LanguageExt;
+using LanguageExt.Common;
+using McMaster.Extensions.CommandLineUtils;
+using static Gimme.Core.Extensions.All;
+using static LanguageExt.Prelude;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using LanguageExt;
-using static LanguageExt.Prelude;
-using Gimme.Extensions;
-using static Gimme.Extensions.All;
-using Gimme.Models;
-using Gimme.Services;
-using Gimme.Validations;
-using McMaster.Extensions.CommandLineUtils;
 using System.Linq;
-using LanguageExt.Common;
+using Gimme.Core.Extensions;
 
 namespace Gimme.Commands
 {
     [Command
         (
             Name = GeneratorCommand.NAME,
-            Description = @"✅ Gives you a new generator.{name}.json file in the currrent directory"
-        ),
+            Description = @"⚡️ Gives you a new generator.{name}.json file in the currrent directory"
+        )
     ]
-    [GimmeSettingsFileMustExistsValidation()]
     public class GeneratorCommand
     {
         public const string NAME = "generator";
@@ -70,7 +69,7 @@ namespace Gimme.Commands
             return fileSystemService.TryToSerialize<GimmeSettingsModel>(fromValue: currentGimmeSettings)
                          .Match(
                              Succ: fileTextContent => fileSystemService
-                                                    .WriteAllTextToFile(newGeneratorFilename, fileTextContent)
+                                                    .WriteAllTextToFile(Constants.GIMME_SETTINGS_FILENAME, fileTextContent)
                                                     .Map(_ => $"✅ Updated file `{Constants.GIMME_SETTINGS_FILENAME}`"),
                              Fail: e => Left<Error, string>(Error.New(e))
                          ).ToValidation();
@@ -83,13 +82,14 @@ namespace Gimme.Commands
                     new GeneratorModel()
                     {
                         Name = Name.ToLower(),
-                        Description = "Your generator description goes here.",
+                        Description = "✨ Your generator description goes here.",
                         Options = new List<OptionModel>()
                     {
                         {
                             new OptionModel()
                             {
-                                Name= ""
+                                Template="-n|--name",
+                                Description="Option desciption"
                             }
                         }
                     },
@@ -98,7 +98,7 @@ namespace Gimme.Commands
                         {
                             new ActionModel()
                             {
-                                Name= ""
+                                Name= "Some action"
                             }
                         }
                     },

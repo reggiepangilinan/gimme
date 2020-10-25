@@ -1,0 +1,9 @@
+{
+  "Name": "test1",
+  "Description": "✨ Sample description",
+  "Actions": [
+    {
+      "Name": "test"
+    }
+  ]
+}
