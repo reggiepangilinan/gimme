@@ -75,6 +75,16 @@ namespace Gimme.Core.Extensions
             return console;
         }
 
+
+        public static IConsole ResultTo(this Validation<Error, string> validation, IConsole console)
+        =>
+             validation
+             .Match(
+                Succ: console.WriteLineSuccess,
+                Fail: errors => console.WriteLineError(errors.Head.Message)
+                
+            );
+        
         public static IConsole ResultTo(this Either<Error, Lst<string>> either, IConsole console)
         {
             ResultTo(either.ToValidation(),console);

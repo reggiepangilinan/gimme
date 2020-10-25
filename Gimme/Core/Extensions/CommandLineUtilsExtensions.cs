@@ -1,9 +1,9 @@
-using Gimme.Commands;
+﻿using Gimme.Commands;
 using McMaster.Extensions.CommandLineUtils;
 
 namespace Gimme.Core.Extensions
 {
-    public static class CommanLineUtilsExtensions
+    public static class CommandLineUtilsExtensions
     {
         public static CommandOption AddCommandOption(this System.Collections.Generic.List<CommandOption> options, CommandOption option)
         {
