@@ -83,7 +83,7 @@ namespace Gimme.Core.Extensions
                 Succ: console.WriteLineSuccess,
                 Fail: errors => console.WriteLineError(errors.Head.Message)
                 
-            );
+            );    
         
         public static IConsole ResultTo(this Either<Error, Lst<string>> either, IConsole console)
         {

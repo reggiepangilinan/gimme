@@ -55,6 +55,7 @@ namespace Gimme.Services
 
         public Option<T> ExceptionToOptionNoneOf<T>(Exception exception) where T : class => Option<T>.None;
 
+
         public Option<GimmeSettingsModel> GetCurrentGimmeSettings()
          => DoesFileExists(Constants.GIMME_SETTINGS_FILENAME)
                     .Map(f => f.Name)

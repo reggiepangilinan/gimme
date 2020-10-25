@@ -20,8 +20,8 @@ namespace Gimme
             // Register services 
             ServiceCollection services = new ServiceCollection();
             services.AddSingleton<IFileSystemService, FileSystemService>();
-            services.AddSingleton<ICommandBuilderService, CommandBuilderService>();
             services.AddSingleton<IGeneratorCommandService, GeneratorCommandService>();
+            services.AddSingleton<ITemplatingService, HandlebarsService>(); //TODO: Maybe we can swap out templating engine for now it defaults to handlebars
             services.AddSingleton<JsonSerializerOptions>(_ => new JsonSerializerOptions()
             {
                 PropertyNameCaseInsensitive = false,
@@ -46,10 +46,10 @@ namespace Gimme
                                     .Map(generator => Try(() => generatorCommandService.BuildCommand(generator)))
                                     .Succs()
                                     .Freeze()
-                            ).None(() => Lst<(string, Option<CommandLineApplication>, Lst<Error>)>.Empty);
+                            ).None(() => Lst<(string generator, Option<CommandLineApplication> cli, Lst<Error> errors)>.Empty);
 
-            buildGeneratorResult.Map(x=> 
-                                        x.Map(y=> 
+            buildGeneratorResult.Map(result => 
+                                        result.Map(y=> 
                                                 y.Item2.Map(app.AddGimmeSubcommand)
                                               )
                                     );           
