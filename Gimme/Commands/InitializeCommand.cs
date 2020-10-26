@@ -27,7 +27,10 @@ namespace Gimme.Commands
         private GimmeSettingsModel DefaultGimmeSettings =>
             new GimmeSettingsModel()
             {
-                GeneratorsFiles = new List<string>()
+                GeneratorsFiles = new List<string>(),
+                Variables = new Dictionary<string,string>() {
+                    { "hello", "world" }
+                }
             };
 
         public void OnExecute(CommandLineApplication app, IConsole console)

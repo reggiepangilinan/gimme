@@ -20,7 +20,7 @@ namespace Gimme.Commands
             .BuildGeneratorResults
             .Match
             (
-                None: () => console.WriteLineInfo("ℹ️  You don't have any generators."),
+                None: () => console.WriteLineInfo("ℹ️  You don't have any valid generators."),
                 Some: results =>
                       results.Map(valueOf =>
                         {

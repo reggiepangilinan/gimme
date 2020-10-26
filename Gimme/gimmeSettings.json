@@ -1,5 +1,8 @@
 {
   "GeneratorsFiles": [
-    "generator.test.json"
-  ]
+    "generator.yes.json"
+  ],
+  "Variables": {
+    "hello": "world"
+  }
 }

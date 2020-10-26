@@ -43,7 +43,7 @@ namespace Gimme
             var buildGeneratorResult = fileSystemService.GetCurrentGimmeSettings()
                             .Some(settings =>
                                     generatorCommandService.GetGenerators(settings)
-                                    .Map(generator => Try(() => generatorCommandService.BuildCommand(generator)))
+                                    .Map(generator => Try(() => generatorCommandService.BuildCommand(settings.Variables, generator)))
                                     .Succs()
                                     .Freeze()
                             ).None(() => Lst<(string generator, Option<CommandLineApplication> cli, Lst<Error> errors)>.Empty);

@@ -9,6 +9,7 @@ using Gimme.Core.Models;
 using LanguageExt;
 using LanguageExt.Common;
 using McMaster.Extensions.CommandLineUtils;
+using McMaster.Extensions.CommandLineUtils.Validation;
 using static LanguageExt.Prelude;
 
 namespace Gimme.Services
@@ -30,7 +31,7 @@ namespace Gimme.Services
                         .Succs()
                         .Freeze();
 
-        public (string generatorName, Option<CommandLineApplication> cli, Lst<Error> errors) BuildCommand(GeneratorModel generator)
+        public (string generatorName, Option<CommandLineApplication> cli, Lst<Error> errors) BuildCommand(IDictionary<string, string> variablesFromSettings, GeneratorModel generator)
         {
             string generatorName = string.IsNullOrWhiteSpace(generator.Name) ? "unknown generator" : generator.Name;
 
@@ -49,9 +50,12 @@ namespace Gimme.Services
             command.Name = generator.Name;
             command.Description = generator.Description;
 
-            toList(generator.Options ?? Lst<OptionModel>.Empty)
-                .Map(ToCommandOption)
-                .Map(command.Options.AddCommandOption);
+
+            //TODO: Validate template pattern
+            var commandOptions = toList(generator.Options ?? Lst<OptionModel>.Empty)
+                 .Map(ToCommandOption)
+                 .Map(command.Options.AddCommandOption);
+
 
             // var subjectOption = new CommandOption("-s|--subject", CommandOptionType.SingleValue);
             // subjectOption.IsRequired(allowEmptyStrings: false, $"{subjectOption.LongName} is required.");
@@ -60,9 +64,11 @@ namespace Gimme.Services
             command.OnExecute(() =>
                 GeneratorCommandHandler
                     .Execute(
-                        new Dictionary<string, string>(),
+                        commandOptions,
+                        variablesFromSettings,
                         templatingService,
-                        PhysicalConsole.Singleton)
+                        PhysicalConsole.Singleton
+                        )
             );
 
             return (generatorName, Option<CommandLineApplication>.Some(command), Lst<Error>.Empty);
@@ -73,7 +79,23 @@ namespace Gimme.Services
             var option = new CommandOption(optionModel.Template, CommandOptionType.SingleValue);
             option.Description = optionModel.Description;
 
-            //TODO: Add valiators here
+            if (optionModel.Validators.IsRequired)
+                option.IsRequired(false, $"{option.LongName} is required.");
+
+            if (optionModel.Validators.IsEmailAddress.GetValueOrDefault())
+                option.Validators.Add(new AttributeValidator(new EmailAddressAttribute()));
+
+            if (optionModel.Validators.MinLength.HasValue)
+                option.Validators.Add(new AttributeValidator(new MinLengthAttribute(optionModel.Validators.MinLength.GetValueOrDefault())));
+
+            if (optionModel.Validators.MaxLength.HasValue) 
+                option.Validators.Add(new AttributeValidator(new MaxLengthAttribute(optionModel.Validators.MaxLength.GetValueOrDefault())));
+
+            if (!string.IsNullOrWhiteSpace(optionModel.Validators.RegEx)) 
+                option.Validators.Add(new AttributeValidator(new RegularExpressionAttribute(optionModel.Validators.RegEx)));
+
+            if (optionModel.Validators.AllowedValues.Length() > 0) option.Validators.Add(new AttributeValidator(new AllowedValuesAttribute(optionModel.Validators.AllowedValues.ToArray())));
+
             return option;
         }
     }
@@ -81,6 +103,6 @@ namespace Gimme.Services
     public interface IGeneratorCommandService
     {
         Lst<GeneratorModel> GetGenerators(GimmeSettingsModel fromSettings);
-        (string generatorName, Option<CommandLineApplication> cli, Lst<Error> errors) BuildCommand(GeneratorModel generator);
+        (string generatorName, Option<CommandLineApplication> cli, Lst<Error> errors) BuildCommand(IDictionary<string, string> variables, GeneratorModel generator);
     }
 }

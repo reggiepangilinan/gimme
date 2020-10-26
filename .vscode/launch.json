@@ -11,6 +11,11 @@
             "preLaunchTask": "build",
             // If you have changed target frameworks, make sure to update the program path.
             "program": "${workspaceFolder}/Gimme/bin/Debug/netcoreapp3.1/Gimme.dll",
+            // Args for Initiazlization
+            // "args": ["init"],
+            // Args for Initiazlization
+            // "args": ["generator","--name", "yes"],
+            // Empty Args
             "args": [""],
             "cwd": "${workspaceFolder}/Gimme",
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console

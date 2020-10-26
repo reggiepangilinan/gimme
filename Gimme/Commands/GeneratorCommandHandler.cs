@@ -10,18 +10,26 @@ namespace Gimme.Commands
 {
     public static class GeneratorCommandHandler
     {
-        public static Unit Execute(IDictionary<string, string> variables, ITemplatingService templatingService, IConsole console)
+        public static Unit Execute(Lst<CommandOption> commandOptions, IDictionary<string, string> variables, ITemplatingService templatingService, IConsole console)
         {
+            //Merge command options and variables from settings
+            var data = new Dictionary<string, string> (
+                                            variables.Append
+                                            (
+                                                commandOptions
+                                                .Map(c => 
+                                                        KeyValuePair
+                                                        .Create(c.LongName, c.Value()?.ToString())
+                                                     )
+                                            ));
+
+            
             string templateContent =
 @"
 public class {{class}} {
-
+{{name}}
 }
 ";
-            var data = new Dictionary<string,string>()
-            {
-                {"class", "OhYeah"}
-            };
 
             return templatingService
                 .TryToMerge(data, templateContent)

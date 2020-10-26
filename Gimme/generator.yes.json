@@ -1,0 +1,23 @@
+{
+  "Name": "yes",
+  "Description": "\u2728 Your generator description goes here.",
+  "Options": [
+    {
+      "Template": "xxx",
+      "Description": "Option desciption",
+      "Validators": {
+        "IsRequired": true,
+        "AllowedValues": ["this"],
+        "IsEmailAddress": false,
+        "MinLength": null,
+        "MaxLength": null,
+        "RegEx": null
+      }
+    }
+  ],
+  "Actions": [
+    {
+      "Name": "Some action"
+    }
+  ]
+}
