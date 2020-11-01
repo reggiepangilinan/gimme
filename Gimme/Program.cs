@@ -39,7 +39,14 @@ namespace Gimme
             var console = servideProvider.GetService<IConsole>() ?? PhysicalConsole.Singleton;
             var fileSystemService = servideProvider.GetService<IFileSystemService>();
             var generatorCommandService = servideProvider.GetService<IGeneratorCommandService>();
+            var buildGeneratorResult = BuildGenerator(app, fileSystemService, generatorCommandService);
 
+            StartUpLogs.Set(buildGeneratorResult);
+            await ExecuteCommandAsync(args, app, console);
+        }
+
+        private static Lst<(string, Option<CommandLineApplication>, Lst<Error>)> BuildGenerator(CommandLineApplication<GimmeCommand> app, IFileSystemService fileSystemService, IGeneratorCommandService generatorCommandService)
+        {
             var buildGeneratorResult = fileSystemService.GetCurrentGimmeSettings()
                             .Some(settings =>
                                     generatorCommandService.GetGenerators(settings)
@@ -48,15 +55,12 @@ namespace Gimme
                                     .Freeze()
                             ).None(() => Lst<(string, Option<CommandLineApplication>, Lst<Error>)>.Empty);
 
-            buildGeneratorResult.Map(x=> 
-                                        x.Map(y=> 
+            buildGeneratorResult.Map(x =>
+                                        x.Map(y =>
                                                 y.Item2.Map(app.AddGimmeSubcommand)
                                               )
-                                    );           
-
-            StartUpLogs.Set(buildGeneratorResult); 
-
-            await ExecuteCommandAsync(args, app, console);
+                                    );
+            return buildGeneratorResult;
         }
 
         private static async Task ExecuteCommandAsync(string[] args, CommandLineApplication<GimmeCommand> app, IConsole console)
