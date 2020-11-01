@@ -9,7 +9,7 @@ namespace Gimme.Commands
 {
 
     [Command(
-            Name = "gimme",
+            Name = GimmeCommand.NAME,
             Description =
             @"
 
@@ -31,6 +31,8 @@ The dotnet cli tool that gives you what you want 😎
     ]
     public class GimmeCommand
     {
+        public const string NAME = "gimme";
+        
         private readonly IFileSystemService fileSystemService;
 
         public GimmeCommand(IFileSystemService fileSystemService)
