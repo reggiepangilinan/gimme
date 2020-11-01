@@ -1,4 +1,7 @@
-﻿using System.Linq;
+﻿using System;
+using System.Diagnostics;
+using System.Linq;
+using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Gimme.Commands;
@@ -16,6 +19,8 @@ namespace Gimme
     {
         static async Task Main(string[] args)
         {
+            //Set console output to UTF8 for emojiness.
+            Console.OutputEncoding = Encoding.UTF8;
 
             // Register services 
             ServiceCollection services = new ServiceCollection();
