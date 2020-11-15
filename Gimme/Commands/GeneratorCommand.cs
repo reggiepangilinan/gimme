@@ -1,5 +1,4 @@
 using Gimme.Core.Models;
-using Gimme.Core.Validators;
 using Gimme.Services;
 using LanguageExt;
 using LanguageExt.Common;
@@ -16,7 +15,7 @@ namespace Gimme.Commands
     [Command
         (
             Name = GeneratorCommand.NAME,
-            Description = @"⚡️ Gives you a new generator.{name}.json file in the currrent directory"
+            Description = @"⚡️ Gives you a new generator"
         )
     ]
     public class GeneratorCommand
@@ -36,7 +35,7 @@ namespace Gimme.Commands
 
         public void OnExecute(CommandLineApplication app, IConsole console)
         {
-            var withThisGeneratorFilename = $"generator.{Name.ToLower()}.json";
+            var withThisGeneratorFilename = $".gimme/generator.{Name.ToLower()}.json";
             (
                 from withCurrentGimmeSettings in fileSystemService.GetCurrentGimmeSettings().MustExists()
                 from withNewGeneratorModel in NewGeneratorMustNotExists(withThisGeneratorFilename)

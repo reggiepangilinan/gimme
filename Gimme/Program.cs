@@ -12,6 +12,7 @@ using LanguageExt.Common;
 using McMaster.Extensions.CommandLineUtils;
 using Microsoft.Extensions.DependencyInjection;
 using static LanguageExt.Prelude;
+using static Gimme.Core.Transformers.All;
 
 namespace Gimme
 {
@@ -25,8 +26,8 @@ namespace Gimme
             // Register services 
             ServiceCollection services = new ServiceCollection();
             services.AddSingleton<IFileSystemService, FileSystemService>();
-            services.AddSingleton<ICommandBuilderService, CommandBuilderService>();
             services.AddSingleton<IGeneratorCommandService, GeneratorCommandService>();
+            services.AddSingleton<ITemplatingService, HandlebarsService>(); //TODO: Maybe we can swap out templating engine for now it defaults to handlebars
             services.AddSingleton<JsonSerializerOptions>(_ => new JsonSerializerOptions()
             {
                 PropertyNameCaseInsensitive = false,
@@ -46,26 +47,27 @@ namespace Gimme
             var generatorCommandService = servideProvider.GetService<IGeneratorCommandService>();
             var buildGeneratorResult = BuildGenerator(app, fileSystemService, generatorCommandService);
 
-            StartUpLogs.Set(buildGeneratorResult);
-            await ExecuteCommandAsync(args, app, console);
-        }
-
-        private static Lst<(string, Option<CommandLineApplication>, Lst<Error>)> BuildGenerator(CommandLineApplication<GimmeCommand> app, IFileSystemService fileSystemService, IGeneratorCommandService generatorCommandService)
-        {
-            var buildGeneratorResult = fileSystemService.GetCurrentGimmeSettings()
+            var buildGeneratorResult = fileSystemService
+                            .GetCurrentGimmeSettings()
                             .Some(settings =>
-                                    generatorCommandService.GetGenerators(settings)
-                                    .Map(generator => Try(() => generatorCommandService.BuildCommand(generator)))
-                                    .Succs()
-                                    .Freeze()
-                            ).None(() => Lst<(string, Option<CommandLineApplication>, Lst<Error>)>.Empty);
+                            {
+                                return generatorCommandService
+                                        .GetGenerators(settings)
+                                        .BindT(generator => Try(() => generatorCommandService.BuildCommand(settings.Variables, generator)))
+                                        .Succs()
+                                        .Freeze();
+                            }
+                            )
+                            .None(() => Lst<(string generator, Option<CommandLineApplication> cli, Lst<Error> errors)>.Empty);
 
-            buildGeneratorResult.Map(x =>
-                                        x.Map(y =>
+            buildGeneratorResult.Map(result =>
+                                        result.Map(y =>
                                                 y.Item2.Map(app.AddGimmeSubcommand)
                                               )
                                     );
-            return buildGeneratorResult;
+
+            StartUpLogs.Set(buildGeneratorResult);
+            await ExecuteCommandAsync(args, app, console);
         }
 
         private static async Task ExecuteCommandAsync(string[] args, CommandLineApplication<GimmeCommand> app, IConsole console)
