@@ -18,7 +18,6 @@ namespace Gimme.Core.Models
         public int? MinLength { get; set; }
         public int? MaxLength { get; set; }
         public string RegEx { get; set; }
-
     }
 
     public class OptionModelValidator : AbstractValidator<OptionModel>

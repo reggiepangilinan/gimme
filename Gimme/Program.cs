@@ -9,6 +9,7 @@ using LanguageExt.Common;
 using McMaster.Extensions.CommandLineUtils;
 using Microsoft.Extensions.DependencyInjection;
 using static LanguageExt.Prelude;
+using static Gimme.Core.Transformers.All;
 
 namespace Gimme
 {
@@ -40,22 +41,26 @@ namespace Gimme
             var fileSystemService = servideProvider.GetService<IFileSystemService>();
             var generatorCommandService = servideProvider.GetService<IGeneratorCommandService>();
 
-            var buildGeneratorResult = fileSystemService.GetCurrentGimmeSettings()
+            var buildGeneratorResult = fileSystemService
+                            .GetCurrentGimmeSettings()
                             .Some(settings =>
-                                    generatorCommandService.GetGenerators(settings)
-                                    .Map(generator => Try(() => generatorCommandService.BuildCommand(settings.Variables, generator)))
-                                    .Succs()
-                                    .Freeze()
-                            ).None(() => Lst<(string generator, Option<CommandLineApplication> cli, Lst<Error> errors)>.Empty);
+                            {
+                                return generatorCommandService
+                                        .GetGenerators(settings)
+                                        .BindT(generator => Try(() => generatorCommandService.BuildCommand(settings.Variables, generator)))
+                                        .Succs()
+                                        .Freeze();
+                            }
+                            )
+                            .None(() => Lst<(string generator, Option<CommandLineApplication> cli, Lst<Error> errors)>.Empty);
 
-            buildGeneratorResult.Map(result => 
-                                        result.Map(y=> 
+            buildGeneratorResult.Map(result =>
+                                        result.Map(y =>
                                                 y.Item2.Map(app.AddGimmeSubcommand)
                                               )
-                                    );           
+                                    );
 
-            StartUpLogs.Set(buildGeneratorResult); 
-
+            StartUpLogs.Set(buildGeneratorResult);
             await ExecuteCommandAsync(args, app, console);
         }
 

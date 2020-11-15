@@ -1,6 +1,6 @@
 {
   "GeneratorsFiles": [
-    "generator.yes.json"
+    ".gimme/generator.yes.json"
   ],
   "Variables": {
     "hello": "world"

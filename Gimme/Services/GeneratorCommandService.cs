@@ -1,8 +1,5 @@
-using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Threading.Tasks;
 using Gimme.Commands;
 using Gimme.Core.Extensions;
 using Gimme.Core.Models;
@@ -24,11 +21,10 @@ namespace Gimme.Services
             this.templatingService = templatingService;
             this.fileSystemService = fileSystemService;
         }
-        public Lst<GeneratorModel> GetGenerators(GimmeSettingsModel fromSettings)
+        public Lst<Try<GeneratorModel>> GetGenerators(GimmeSettingsModel fromSettings)
          => fromSettings.GeneratorsFiles
                         .Map(fileSystemService.TryToReadAllText)
                         .BindT(fileSystemService.TryToDeserialize<GeneratorModel>)
-                        .Succs()
                         .Freeze();
 
         public (string generatorName, Option<CommandLineApplication> cli, Lst<Error> errors) BuildCommand(IDictionary<string, string> variablesFromSettings, GeneratorModel generator)
@@ -56,17 +52,13 @@ namespace Gimme.Services
                  .Map(ToCommandOption)
                  .Map(command.Options.AddCommandOption);
 
-
-            // var subjectOption = new CommandOption("-s|--subject", CommandOptionType.SingleValue);
-            // subjectOption.IsRequired(allowEmptyStrings: false, $"{subjectOption.LongName} is required.");
-            // subjectOption.Description = "Some option";
-            // dynamicSubCommand.Options.Add(subjectOption);
             command.OnExecute(() =>
                 GeneratorCommandHandler
                     .Execute(
                         commandOptions,
                         variablesFromSettings,
                         templatingService,
+                        generator.Actions,
                         PhysicalConsole.Singleton
                         )
             );
@@ -102,7 +94,7 @@ namespace Gimme.Services
 
     public interface IGeneratorCommandService
     {
-        Lst<GeneratorModel> GetGenerators(GimmeSettingsModel fromSettings);
+        Lst<Try<GeneratorModel>> GetGenerators(GimmeSettingsModel fromSettings);
         (string generatorName, Option<CommandLineApplication> cli, Lst<Error> errors) BuildCommand(IDictionary<string, string> variables, GeneratorModel generator);
     }
 }

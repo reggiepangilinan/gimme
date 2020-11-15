@@ -14,9 +14,9 @@
             // Args for Initiazlization
             // "args": ["init"],
             // Args for Initiazlization
-            // "args": ["generator","--name", "yes"],
+            "args": ["generator","--name", "yes"],
             // Empty Args
-            "args": [""],
+            // "args": [""],
             "cwd": "${workspaceFolder}/Gimme",
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
             "console": "internalConsole",

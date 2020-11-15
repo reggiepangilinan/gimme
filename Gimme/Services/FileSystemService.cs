@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using System.Text.Json;
-using System.Threading.Tasks;
 using Gimme.Core.Models;
 using LanguageExt;
 using LanguageExt.Common;
@@ -77,7 +76,10 @@ namespace Gimme.Services
         {
             try
             {
-                File.WriteAllText(Path.Combine(CurrentDirectory, relativePath), content);
+                var fileName = Path.Combine(CurrentDirectory, relativePath);
+                var directory = new FileInfo(fileName).Directory.FullName;
+                Directory.CreateDirectory(directory);
+                File.WriteAllText(fileName, content);
                 return unit;
             }
             catch (Exception ex)

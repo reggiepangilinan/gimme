@@ -3,11 +3,11 @@
   "Description": "\u2728 Your generator description goes here.",
   "Options": [
     {
-      "Template": "xxx",
+      "Template": "-n|--name",
       "Description": "Option desciption",
       "Validators": {
-        "IsRequired": true,
-        "AllowedValues": ["this"],
+        "IsRequired": false,
+        "AllowedValues": [],
         "IsEmailAddress": false,
         "MinLength": null,
         "MaxLength": null,
@@ -17,7 +17,10 @@
   ],
   "Actions": [
     {
-      "Name": "Some action"
+      "Name": "Some action",
+      "Type": "Addxs",
+      "Path": null,
+      "TemplateFile": null
     }
   ]
 }
