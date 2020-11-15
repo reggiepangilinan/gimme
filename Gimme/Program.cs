@@ -45,8 +45,6 @@ namespace Gimme
             var console = servideProvider.GetService<IConsole>() ?? PhysicalConsole.Singleton;
             var fileSystemService = servideProvider.GetService<IFileSystemService>();
             var generatorCommandService = servideProvider.GetService<IGeneratorCommandService>();
-            var buildGeneratorResult = BuildGenerator(app, fileSystemService, generatorCommandService);
-
             var buildGeneratorResult = fileSystemService
                             .GetCurrentGimmeSettings()
                             .Some(settings =>
